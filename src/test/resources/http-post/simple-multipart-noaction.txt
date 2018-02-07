@@ -1,0 +1,13 @@
+POST  HTTP/1.1
+Content-Encoding: gzip,deflate
+SOAPAction: 
+Content-Type: multipart/related; boundary=MIMEboundary; type="application/xop+xml"; start-info="application/soap+xml"; start="<body>"
+
+--MIMEboundary\r
+Content-ID: <body>\r
+Content-Disposition: form-data; name="<body>"\r
+Content-Type: application/xop+xml; charset=UTF-8; type="application/soap+xml"\r
+Content-Transfer-Encoding: binary\r
+\r
+body\r
+--MIMEboundary--\r

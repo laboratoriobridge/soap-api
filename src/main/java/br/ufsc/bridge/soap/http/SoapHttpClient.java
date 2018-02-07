@@ -1,75 +1,75 @@
 package br.ufsc.bridge.soap.http;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Map.Entry;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.soap.SOAPException;
+import lombok.Getter;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.config.SocketConfig;
-import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
 
-import br.ufsc.bridge.soap.http.exception.SoapCreateMessageException;
 import br.ufsc.bridge.soap.http.exception.SoapHttpConnectionException;
 import br.ufsc.bridge.soap.http.exception.SoapHttpResponseException;
-import br.ufsc.bridge.soap.http.exception.SoapReadMessageException;
+import br.ufsc.bridge.soap.http.exception.SoapInvalidHeaderException;
+import br.ufsc.bridge.soap.http.util.ByteArrayOutputStreamNoCopy;
 
-public class SoapHttpClient<T> {
-
-	private static Logger logger = Logger.getLogger(SoapHttpClient.class.getName());
-
+public class SoapHttpClient {
 	private CloseableHttpClient httpClient;
-
 	private Map<String, String> customHeaders;
+	@Getter
 	private URL url;
 	private HttpHost host;
-	private SOAPMessageInterpreter<T> soapMessage;
 
-	public SoapHttpClient(SOAPMessageInterpreter<T> soapMessage) {
-		this.soapMessage = soapMessage;
-
-		RequestConfig requestConfig = RequestConfig.custom()
+	public SoapHttpClient() {
+		this(RequestConfig.custom()
 				.setSocketTimeout(60000)
 				.setConnectTimeout(30000)
 				.setExpectContinueEnabled(false)
 				.setRedirectsEnabled(true)
-				.build();
+				.build());
+	}
 
+	public SoapHttpClient(RequestConfig requestConfig) {
+		this(HttpClients.custom()
+				.setDefaultRequestConfig(requestConfig)
+				.setConnectionManager(connectionManager())
+				.build());
+	}
+
+	private static PoolingHttpClientConnectionManager connectionManager() {
 		PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
 		cm.setValidateAfterInactivity(10000);
 		cm.setDefaultSocketConfig(SocketConfig.custom().setTcpNoDelay(true).build());
+		return cm;
+	}
 
-		this.httpClient = HttpClients.custom()
-				.setDefaultRequestConfig(requestConfig)
-				.setConnectionManager(cm)
-				.build();
+	public SoapHttpClient(CloseableHttpClient httpClient) {
+		this.httpClient = httpClient;
 
 		this.customHeaders = new HashMap<>();
-		this.putHeader("Content-Type", "application/soap+xml;charset=UTF-8");
-		this.putHeader("Accept-Encoding", "gzip,deflate");
+		this.putHeader(HttpHeaders.CONTENT_ENCODING, "gzip,deflate");
 	}
 
 	public void putHeader(String key, String value) {
-		this.customHeaders.put(key, value);
+		if (value != null) {
+			this.customHeaders.put(key, value);
+		} else {
+			this.customHeaders.remove(key);
+		}
 	}
 
 	public void setUrl(String url) throws MalformedURLException {
@@ -77,52 +77,45 @@ public class SoapHttpClient<T> {
 		this.host = new HttpHost(this.url.getHost(), this.url.getPort(), this.url.getProtocol());
 	}
 
-	public T send(Object jaxbObject) throws SoapHttpConnectionException, SoapHttpResponseException, SoapCreateMessageException, SoapReadMessageException {
+	public SoapHttpResponse post(SoapHttpRequest httpRequest) throws SoapHttpResponseException, SoapHttpConnectionException {
 		HttpPost httpPost = null;
-		InputStream is = null;
+		ByteArrayOutputStreamNoCopy baos = null;
 		try {
-			httpPost = new HttpPost(this.url.getFile());
+			HttpResponse response = this.httpClient.execute(this.host, httpPost = this.httpPost(httpRequest));
 
-			httpPost.setEntity(this.createMessage(jaxbObject));
-
-			for (Map.Entry<String, String> header : this.customHeaders.entrySet()) {
-				httpPost.setHeader(header.getKey(), header.getValue());
-			}
-
-			HttpResponse response = this.httpClient.execute(this.host, httpPost);
 			int responseCode = response.getStatusLine().getStatusCode();
 			if (responseCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
-				String error = IOUtils.toString(is = response.getEntity().getContent());
-				throw new SoapHttpResponseException("HTTP Response code: " + responseCode + " | error:" + error);
+				baos = new ByteArrayOutputStreamNoCopy(response.getEntity().getContent());
+				throw new SoapHttpResponseException("HTTP Response code: " + responseCode + " | error: " + new String(baos.toByteArray(), "UTF-8"));
 			} else if (responseCode != HttpStatus.SC_OK) {
 				throw new SoapHttpResponseException("HTTP Response code: " + responseCode);
 			}
 
-			Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is = response.getEntity().getContent());
-			return this.soapMessage.readMessage(document);
+			baos = new ByteArrayOutputStreamNoCopy(response.getEntity().getContent());
+			return new SoapHttpResponse(baos.inputStream(), response.getAllHeaders());
 		} catch (IOException e) {
 			if (null != httpPost) {
 				httpPost.abort();
 			}
 			throw new SoapHttpConnectionException("Error in connection", e);
-		} catch (SOAPException e) {
-			throw new SoapCreateMessageException("Error generating SOAP message", e);
-		} catch (SAXException | ParserConfigurationException e) {
-			throw new SoapReadMessageException("Error parsing XML response", e);
+		} catch (SoapInvalidHeaderException e) {
+			throw new SoapHttpResponseException("Multipart file with invalid header", e);
 		} finally {
-			if (null != is) {
-				try {
-					is.close();
-				} catch (IOException ioe) {
-					logger.log(Level.SEVERE, "Error while closing response inputStream", ioe);
-				}
-			}
+			IOUtils.closeQuietly(baos);
 		}
 	}
 
-	private ByteArrayEntity createMessage(Object jaxbObject) throws SOAPException, SoapCreateMessageException, IOException {
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		this.soapMessage.createMessage(jaxbObject).writeTo(outputStream);
-		return new ByteArrayEntity(outputStream.toByteArray());
+	public HttpPost httpPost(SoapHttpRequest httpRequest) {
+		HttpEntity httpEntity = httpRequest.httpEntity();
+		HttpPost httpPost = new HttpPost(this.url.getFile());
+		httpPost.setEntity(httpEntity);
+		for (Map.Entry<String, String> header : this.customHeaders.entrySet()) {
+			httpPost.setHeader(header.getKey(), header.getValue());
+		}
+		for (Entry<String, String> header : httpRequest.getHeaders().entrySet()) {
+			httpPost.setHeader(header.getKey(), header.getValue());
+		}
+		httpPost.setHeader(HttpHeaders.CONTENT_TYPE, httpEntity.getContentType().getValue());
+		return httpPost;
 	}
 }

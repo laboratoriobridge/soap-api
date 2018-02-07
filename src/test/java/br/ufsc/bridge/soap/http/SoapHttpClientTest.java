@@ -30,6 +30,7 @@ import br.ufsc.bridge.soap.http.exception.SoapHttpConnectionException;
 import br.ufsc.bridge.soap.http.exception.SoapHttpResponseException;
 
 public class SoapHttpClientTest {
+	private static final String URL = "http://localhost";
 
 	@Mock
 	CloseableHttpClient httpClient;
@@ -61,7 +62,7 @@ public class SoapHttpClientTest {
 		this.headers[0] = new BasicHeader(HttpHeaders.CONTENT_TYPE, " application/soap+xml");
 		this.headers[1] = new BasicHeader("MIME-Version", "1.0");
 
-		when(this.httpClient.execute(Matchers.any(HttpHost.class), Matchers.any(HttpPost.class))).thenReturn(this.response);
+		when(this.httpClient.execute(Matchers.any(HttpPost.class))).thenReturn(this.response);
 
 		when(this.response.getStatusLine()).thenReturn(this.status);
 		when(this.response.getEntity()).thenReturn(this.entity);
@@ -77,14 +78,13 @@ public class SoapHttpClientTest {
 		when(this.entity.getContentType()).thenReturn(new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/soap+xml"));
 
 		this.soapClient = new SoapHttpClient(this.httpClient);
-		this.soapClient.setUrl("http://localhost:8080");
 
 		this.bodyRequest = new ByteArrayInputStream("request test".getBytes("UTF-8"));
 	}
 
 	@Test
 	public void response200() throws ClientProtocolException, IOException, SoapHttpResponseException, SoapHttpConnectionException {
-		SoapHttpResponse send = this.soapClient.post(new SoapHttpRequest(null, this.bodyRequest));
+		SoapHttpResponse send = this.soapClient.request(new SoapHttpRequest(URL, null, this.bodyRequest));
 		Assert.assertEquals(this.bodyResponseValue, IOUtils.toString(send.getBody()));
 	}
 
@@ -93,7 +93,7 @@ public class SoapHttpClientTest {
 		when(this.status.getStatusCode()).thenReturn(500);
 
 		try {
-			this.soapClient.post(new SoapHttpRequest(null, this.bodyRequest));
+			this.soapClient.request(new SoapHttpRequest(URL, null, this.bodyRequest));
 		} catch (SoapHttpResponseException e) {
 			Assert.assertEquals("HTTP Response code: 500 | error: " + this.bodyResponseValue, e.getMessage());
 		}
@@ -104,7 +104,7 @@ public class SoapHttpClientTest {
 		when(this.status.getStatusCode()).thenReturn(400);
 
 		try {
-			this.soapClient.post(new SoapHttpRequest(null, this.bodyRequest));
+			this.soapClient.request(new SoapHttpRequest(URL, null, this.bodyRequest));
 		} catch (SoapHttpResponseException e) {
 			Assert.assertEquals("HTTP Response code: 400", e.getMessage());
 		}
@@ -119,17 +119,17 @@ public class SoapHttpClientTest {
 						ConnectException.class);
 
 		try {
-			this.soapClient.post(new SoapHttpRequest(null, this.bodyRequest));
+			this.soapClient.request(new SoapHttpRequest(URL, null, this.bodyRequest));
 		} catch (SoapHttpConnectionException e) {
 			Assert.assertEquals("Error in connection", e.getMessage());
 		}
 		try {
-			this.soapClient.post(new SoapHttpRequest(null, this.bodyRequest));
+			this.soapClient.request(new SoapHttpRequest(URL, null, this.bodyRequest));
 		} catch (SoapHttpConnectionException e) {
 			Assert.assertEquals("Error in connection", e.getMessage());
 		}
 		try {
-			this.soapClient.post(new SoapHttpRequest(null, this.bodyRequest));
+			this.soapClient.request(new SoapHttpRequest(URL, null, this.bodyRequest));
 		} catch (SoapHttpConnectionException e) {
 			Assert.assertEquals("Error in connection", e.getMessage());
 		}

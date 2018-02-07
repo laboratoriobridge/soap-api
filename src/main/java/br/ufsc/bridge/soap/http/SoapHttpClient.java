@@ -1,22 +1,15 @@
 package br.ufsc.bridge.soap.http;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-
-import lombok.Getter;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -30,9 +23,6 @@ import br.ufsc.bridge.soap.http.util.ByteArrayOutputStreamNoCopy;
 public class SoapHttpClient {
 	private CloseableHttpClient httpClient;
 	private Map<String, String> customHeaders;
-	@Getter
-	private URL url;
-	private HttpHost host;
 
 	public SoapHttpClient() {
 		this(RequestConfig.custom()
@@ -72,16 +62,11 @@ public class SoapHttpClient {
 		}
 	}
 
-	public void setUrl(String url) throws MalformedURLException {
-		this.url = new URL(url);
-		this.host = new HttpHost(this.url.getHost(), this.url.getPort(), this.url.getProtocol());
-	}
-
-	public SoapHttpResponse post(SoapHttpRequest httpRequest) throws SoapHttpResponseException, SoapHttpConnectionException {
-		HttpPost httpPost = null;
+	public SoapHttpResponse request(SoapHttpRequest soapHttpRequest) throws SoapHttpResponseException, SoapHttpConnectionException {
+		HttpRequestBase httpRequest = null;
 		ByteArrayOutputStreamNoCopy baos = null;
 		try {
-			HttpResponse response = this.httpClient.execute(this.host, httpPost = this.httpPost(httpRequest));
+			HttpResponse response = this.httpClient.execute(httpRequest = soapHttpRequest.httpRequest(this.customHeaders));
 
 			int responseCode = response.getStatusLine().getStatusCode();
 			if (responseCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
@@ -94,8 +79,8 @@ public class SoapHttpClient {
 			baos = new ByteArrayOutputStreamNoCopy(response.getEntity().getContent());
 			return new SoapHttpResponse(baos.inputStream(), response.getAllHeaders());
 		} catch (IOException e) {
-			if (null != httpPost) {
-				httpPost.abort();
+			if (null != httpRequest) {
+				httpRequest.abort();
 			}
 			throw new SoapHttpConnectionException("Error in connection", e);
 		} catch (SoapInvalidHeaderException e) {
@@ -103,19 +88,5 @@ public class SoapHttpClient {
 		} finally {
 			IOUtils.closeQuietly(baos);
 		}
-	}
-
-	public HttpPost httpPost(SoapHttpRequest httpRequest) {
-		HttpEntity httpEntity = httpRequest.httpEntity();
-		HttpPost httpPost = new HttpPost(this.url.getFile());
-		httpPost.setEntity(httpEntity);
-		for (Map.Entry<String, String> header : this.customHeaders.entrySet()) {
-			httpPost.setHeader(header.getKey(), header.getValue());
-		}
-		for (Entry<String, String> header : httpRequest.getHeaders().entrySet()) {
-			httpPost.setHeader(header.getKey(), header.getValue());
-		}
-		httpPost.setHeader(HttpHeaders.CONTENT_TYPE, httpEntity.getContentType().getValue());
-		return httpPost;
 	}
 }

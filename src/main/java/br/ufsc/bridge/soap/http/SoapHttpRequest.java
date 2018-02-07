@@ -13,7 +13,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.UUID;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,7 +20,10 @@ import lombok.Setter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
 import org.apache.http.client.entity.EntityBuilder;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.FormBodyPartBuilder;
 import org.apache.http.entity.mime.HttpMultipartMode;
@@ -34,6 +36,7 @@ import org.apache.http.message.BasicNameValuePair;
 @NoArgsConstructor
 public class SoapHttpRequest {
 
+	private String url;
 	private boolean multipart = false;
 	private String action;
 	private Map<String, String> headers = new HashMap<>();
@@ -41,16 +44,17 @@ public class SoapHttpRequest {
 	private InputStream body;
 	private Map<String, InputStream> parts;
 
-	public SoapHttpRequest(String action, InputStream body) {
-		this(action, null, body);
+	public SoapHttpRequest(String url, String action, InputStream body) {
+		this(url, action, null, body);
 		this.multipart = false;
 	}
 
-	public SoapHttpRequest(String action, String soapId, InputStream soap) {
-		this(action, soapId, soap, null);
+	public SoapHttpRequest(String url, String action, String soapId, InputStream soap) {
+		this(url, action, soapId, soap, null);
 	}
 
-	public SoapHttpRequest(String action, String soapId, InputStream soap, Map<String, InputStream> parts) {
+	public SoapHttpRequest(String url, String action, String soapId, InputStream soap, Map<String, InputStream> parts) {
+		this.url = url;
 		this.action = action;
 		this.soapId = soapId;
 		this.headers.put(SOAP_ACTION_KEY, action);
@@ -59,12 +63,35 @@ public class SoapHttpRequest {
 		this.multipart = true;
 	}
 
-	public HttpEntity multipartEntity() {
-		String id = this.soapId;
-		if (this.soapId == null) {
-			id = UUID.randomUUID().toString();
+	public HttpRequestBase httpRequest(Map<String, String> customHeaders) {
+		HttpPost httpPost = new HttpPost(this.url);
+		httpPost.setEntity(this.httpEntity());
+		for (Map.Entry<String, String> header : customHeaders.entrySet()) {
+			httpPost.setHeader(header.getKey(), header.getValue());
 		}
-		id = this.addPointyBrackets(id);
+		for (Entry<String, String> header : this.headers.entrySet()) {
+			httpPost.setHeader(header.getKey(), header.getValue());
+		}
+		httpPost.setHeader(HttpHeaders.CONTENT_TYPE, httpPost.getEntity().getContentType().getValue());
+		return httpPost;
+	}
+
+	public HttpEntity httpEntity() {
+		HttpEntity httpEntity;
+		if (this.multipart) {
+			httpEntity = this.multipartEntity();
+		} else {
+			httpEntity = EntityBuilder.create()
+					.setContentType(StringUtils.isBlank(this.action)
+							? SOAP_TYPE
+							: SOAP_TYPE.withParameters(new BasicNameValuePair(ACTION_KEY, this.action)))
+					.setStream(this.body).build();
+		}
+		return httpEntity;
+	}
+
+	public HttpEntity multipartEntity() {
+		String id = this.addPointyBrackets(this.soapId);
 		ContentType multipartType = StringUtils.isBlank(this.action)
 				? MULTIPART_RELATED_TYPE.withParameters(
 						new BasicNameValuePair(START_KEY, id))
@@ -97,21 +124,5 @@ public class SoapHttpRequest {
 
 	private String addPointyBrackets(String id) {
 		return StringUtils.appendIfMissing(StringUtils.prependIfMissing(id, "<"), ">");
-	}
-
-	public HttpEntity httpEntity() {
-		if (this.multipart) {
-			return this.multipartEntity();
-		} else {
-			return EntityBuilder.create()
-					.setContentType(StringUtils.isBlank(this.action)
-							? SOAP_TYPE
-							: SOAP_TYPE.withParameters(new BasicNameValuePair(ACTION_KEY, this.action)))
-					.setStream(this.body).build();
-		}
-	}
-
-	public Map<String, String> getHeaders() {
-		return this.headers;
 	}
 }

@@ -10,7 +10,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 
 /**
- * Classe responsavel por gerar os arquivos que simulão resquests http
+ * Classe responsavel por gerar os arquivos que simulam resquests http
  * Essa classe é necessária pelo fato que a especificação http diz que a tag CRLF (\r\n) faz a delimitação das seções.
  *
  * @author fernandobt8

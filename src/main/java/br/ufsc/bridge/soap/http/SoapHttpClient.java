@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.io.IOUtils;
+import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -20,6 +23,7 @@ import br.ufsc.bridge.soap.http.exception.SoapHttpResponseException;
 import br.ufsc.bridge.soap.http.exception.SoapInvalidHeaderException;
 import br.ufsc.bridge.soap.http.util.ByteArrayOutputStreamNoCopy;
 
+@Slf4j
 public class SoapHttpClient {
 	private CloseableHttpClient httpClient;
 	private Map<String, String> customHeaders;
@@ -51,7 +55,7 @@ public class SoapHttpClient {
 		this.httpClient = httpClient;
 
 		this.customHeaders = new HashMap<>();
-		this.putHeader(HttpHeaders.CONTENT_ENCODING, "gzip,deflate");
+		this.putHeader(HttpHeaders.ACCEPT_ENCODING, "gzip,deflate");
 	}
 
 	public void putHeader(String key, String value) {
@@ -77,6 +81,9 @@ public class SoapHttpClient {
 			}
 
 			baos = new ByteArrayOutputStreamNoCopy(response.getEntity().getContent());
+			if (log.isDebugEnabled()) {
+				this.logRequestResponse(baos, response, httpRequest);
+			}
 			return new SoapHttpResponse(baos.inputStream(), response.getAllHeaders());
 		} catch (IOException e) {
 			if (null != httpRequest) {
@@ -88,5 +95,14 @@ public class SoapHttpClient {
 		} finally {
 			IOUtils.closeQuietly(baos);
 		}
+	}
+
+	private void logRequestResponse(ByteArrayOutputStreamNoCopy baos, HttpResponse response, HttpRequestBase httpRequest) {
+		StringBuilder builder = new StringBuilder();
+		for (Header h : response.getAllHeaders()) {
+			builder.append(h.toString() + "\n");
+		}
+		builder.append("\n" + new String(baos.toByteArray()));
+		log.debug("HTTP response:\n" + builder.toString() + "\n");
 	}
 }

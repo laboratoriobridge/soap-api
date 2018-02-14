@@ -47,10 +47,15 @@ public class MultipartHeader {
 	}
 
 	private String extractKey(Header header, String key) {
-		return StringUtils.substringBetween(
+		String value = StringUtils.substringBetween(
 				StringUtils.appendIfMissing(header.getValue(), ";"),
 				key + "=",
 				";");
+		String withoutQuotes = StringUtils.substringBetween(value, "\"");
+		if (withoutQuotes != null) {
+			value = withoutQuotes;
+		}
+		return value;
 	}
 
 	public boolean hasStart() {

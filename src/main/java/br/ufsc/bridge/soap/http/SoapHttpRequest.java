@@ -9,6 +9,7 @@ import static br.ufsc.bridge.soap.http.multipart.SoapMultipartConstants.SOAP_XOP
 import static br.ufsc.bridge.soap.http.multipart.SoapMultipartConstants.START_KEY;
 import static br.ufsc.bridge.soap.http.multipart.SoapMultipartConstants.TEXT_XML_UTF8_TYPE;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,8 +18,11 @@ import java.util.Map.Entry;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.entity.EntityBuilder;
@@ -31,6 +35,7 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.message.BasicNameValuePair;
 
+@Slf4j
 @Getter
 @Setter
 @NoArgsConstructor
@@ -73,6 +78,9 @@ public class SoapHttpRequest {
 			httpPost.setHeader(header.getKey(), header.getValue());
 		}
 		httpPost.setHeader(HttpHeaders.CONTENT_TYPE, httpPost.getEntity().getContentType().getValue());
+		if (log.isDebugEnabled()) {
+			this.logRequest(httpPost);
+		}
 		return httpPost;
 	}
 
@@ -124,5 +132,26 @@ public class SoapHttpRequest {
 
 	private String addPointyBrackets(String id) {
 		return StringUtils.appendIfMissing(StringUtils.prependIfMissing(id, "<"), ">");
+	}
+
+	private void logRequest(HttpPost httpPost) {
+		StringBuilder builder = new StringBuilder();
+		for (Header h : httpPost.getAllHeaders()) {
+			builder.append(h.toString() + "\n");
+		}
+		try {
+			ByteArrayOutputStream writer = new ByteArrayOutputStream();
+			this.httpEntity().writeTo(writer);
+			builder.append("\n" + IOUtils.toString(writer.toByteArray(), "UTF-8"));
+			this.body.reset();
+			if (this.parts != null) {
+				for (InputStream parts : this.parts.values()) {
+					parts.reset();
+				}
+			}
+		} catch (Exception e) {
+			log.debug("error reading request for debug", e);
+		}
+		log.debug("HTTP request:\n" + builder.toString() + "\n");
 	}
 }

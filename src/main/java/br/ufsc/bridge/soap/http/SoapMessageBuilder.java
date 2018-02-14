@@ -115,7 +115,7 @@ public class SoapMessageBuilder {
 				try {
 					ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 					message.writeTo(outputStream);
-					log.debug("Soap Envelope: " + outputStream.toString("UTF-8"));
+					log.debug("Soap Envelope: \n" + outputStream.toString("UTF-8") + "\n");
 				} catch (IOException e) {
 					log.debug("Error debug writeTo Soap Envelope");
 				}

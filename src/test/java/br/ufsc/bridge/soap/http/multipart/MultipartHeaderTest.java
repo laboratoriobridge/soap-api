@@ -18,7 +18,7 @@ public class MultipartHeaderTest {
 	@Before
 	public void init() {
 		this.headers = new Header[2];
-		this.headers[0] = new BasicHeader(HttpHeaders.CONTENT_TYPE, " Multipart/Related;boundary=MIME_boundary;\n" +
+		this.headers[0] = new BasicHeader(HttpHeaders.CONTENT_TYPE, " Multipart/Related;boundary=\"MIME_boundary\";\n" +
 				"    type=\"application/xop+xml\";\n" +
 				"    start=\"<mymessage.xml@example.org>\";\n" +
 				"    startinfo=\"application/soap+xml; action=\"ProcessData\"");

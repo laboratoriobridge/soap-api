@@ -68,6 +68,15 @@ public class SoapHttpRequest {
 		this.multipart = true;
 	}
 
+	public SoapHttpRequest addHeader(String key, String value) {
+		if (value == null) {
+			this.headers.remove(key);
+		} else {
+			this.headers.put(key, value);
+		}
+		return this;
+	}
+
 	public HttpRequestBase httpRequest(Map<String, String> customHeaders) {
 		HttpPost httpPost = new HttpPost(this.url);
 		httpPost.setEntity(this.httpEntity());

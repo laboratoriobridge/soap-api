@@ -3,7 +3,6 @@ package br.ufsc.bridge.soap.http;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -21,8 +20,6 @@ import javax.xml.soap.SOAPHeader;
 import javax.xml.soap.SOAPMessage;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.w3c.dom.Document;
@@ -33,49 +30,21 @@ import br.ufsc.bridge.soap.http.exception.SoapHttpResponseException;
 import br.ufsc.bridge.soap.http.util.ByteArrayOutputStreamNoCopy;
 
 @Slf4j
-@Getter
 @AllArgsConstructor
-@NoArgsConstructor
 public class SoapMessageBuilder {
 	protected SoapCredential c;
-	protected SoapHttpClient httpClient;
 
-	public static SoapMessageBuilder create() {
-		return new SoapMessageBuilder();
-	}
-
-	public SoapMessageBuilder credential(SoapCredential c) {
-		this.c = c;
-		return this;
-	}
-
-	public SoapMessageBuilder httpClient(SoapHttpClient httpClient) {
-		this.httpClient = httpClient;
-		return this;
-	}
-
-	public SoapHttpResponse sendMessage(String url, String action, Object jaxbObject) throws SoapCreateMessageException, SoapHttpResponseException, SoapHttpConnectionException {
+	public InputStream createMessage(Object jaxbObject) throws SoapCreateMessageException, SoapHttpResponseException, SoapHttpConnectionException {
 		try {
 			ByteArrayOutputStreamNoCopy outputStream = new ByteArrayOutputStreamNoCopy();
-			this.soapMessage(url, action, jaxbObject).writeTo(outputStream);
-			return this.httpClient.request(new SoapHttpRequest(url, action, outputStream.inputStream()));
+			this.soapMessage(jaxbObject).writeTo(outputStream);
+			return outputStream.inputStream();
 		} catch (IOException | SOAPException e) {
 			throw new SoapCreateMessageException("Error writing soap message", e);
 		}
 	}
 
-	public SoapHttpResponse sendMessage(String url, String action, Object jaxbObject, Map<String, InputStream> docs)
-			throws SoapCreateMessageException, SoapHttpResponseException, SoapHttpConnectionException {
-		try {
-			ByteArrayOutputStreamNoCopy outputStream = new ByteArrayOutputStreamNoCopy();
-			this.soapMessage(url, action, jaxbObject).writeTo(outputStream);
-			return this.httpClient.request(new SoapHttpRequest(url, action, "soapid", outputStream.inputStream(), docs));
-		} catch (IOException | SOAPException e) {
-			throw new SoapCreateMessageException("Error writing soap message", e);
-		}
-	}
-
-	protected SOAPMessage soapMessage(String url, String action, Object data) throws SoapCreateMessageException {
+	protected SOAPMessage soapMessage(Object data) throws SoapCreateMessageException {
 		SOAPMessage message = null;
 		try {
 			message = MessageFactory.newInstance(SOAPConstants.SOAP_1_2_PROTOCOL).createMessage();

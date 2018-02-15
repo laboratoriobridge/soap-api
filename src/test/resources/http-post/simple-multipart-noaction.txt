@@ -5,9 +5,9 @@ Content-Type: multipart/related; boundary=MIMEboundary; type="application/xop+xm
 
 --MIMEboundary\r
 Content-ID: <body>\r
+Content-Transfer-Encoding: 8bit\r
 Content-Disposition: form-data; name="<body>"\r
 Content-Type: application/xop+xml; charset=UTF-8; type="application/soap+xml"\r
-Content-Transfer-Encoding: binary\r
 \r
 body\r
 --MIMEboundary--\r

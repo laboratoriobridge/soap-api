@@ -5,22 +5,22 @@ Content-Type: multipart/related; boundary=MIMEboundary; type="application/xop+xm
 
 --MIMEboundary\r
 Content-ID: <body>\r
+Content-Transfer-Encoding: 8bit\r
 Content-Disposition: form-data; name="<body>"\r
 Content-Type: application/xop+xml; charset=UTF-8; type="application/soap+xml"\r
-Content-Transfer-Encoding: binary\r
 \r
 body\r
 --MIMEboundary\r
 Content-ID: <part2>\r
 Content-Disposition: form-data; name="part2"\r
-Content-Type: text/xml; charset=UTF-8\r
+Content-Type: application/octet-stream\r
 Content-Transfer-Encoding: binary\r
 \r
 part2\r
 --MIMEboundary\r
 Content-ID: <part1>\r
 Content-Disposition: form-data; name="part1"\r
-Content-Type: text/xml; charset=UTF-8\r
+Content-Type: application/octet-stream\r
 Content-Transfer-Encoding: binary\r
 \r
 part1\r

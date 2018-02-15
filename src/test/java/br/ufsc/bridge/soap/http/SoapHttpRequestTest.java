@@ -1,9 +1,7 @@
 package br.ufsc.bridge.soap.http;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
@@ -26,17 +24,17 @@ public class SoapHttpRequestTest {
 	public static final String PART1 = "part1";
 	public static final String PART2 = "part2";
 
-	public static ByteArrayInputStream BODY_BYTE;
-	public static ByteArrayInputStream PART1_BYTE;
-	public static ByteArrayInputStream PART2_BYTE;
+	public static byte[] BODY_BYTE;
+	public static byte[] PART1_BYTE;
+	public static byte[] PART2_BYTE;
 
 	private HashMap<String, String> headers;
 
 	@Before
 	public void init() throws Exception {
-		BODY_BYTE = new ByteArrayInputStream(BODY.getBytes("UTF-8"));
-		PART1_BYTE = new ByteArrayInputStream(PART1.getBytes("UTF-8"));
-		PART2_BYTE = new ByteArrayInputStream(PART2.getBytes("UTF-8"));
+		BODY_BYTE = BODY.getBytes("UTF-8");
+		PART1_BYTE = PART1.getBytes("UTF-8");
+		PART2_BYTE = PART2.getBytes("UTF-8");
 
 		this.headers = new LinkedHashMap<>();
 		this.headers.put(HttpHeaders.CONTENT_ENCODING, "gzip,deflate");
@@ -76,7 +74,7 @@ public class SoapHttpRequestTest {
 
 	@Test
 	public void multipart() throws IOException {
-		HashMap<String, InputStream> parts = new LinkedHashMap<>();
+		HashMap<String, byte[]> parts = new LinkedHashMap<>();
 		parts.put(PART2, PART2_BYTE);
 		parts.put(PART1, PART1_BYTE);
 		SoapHttpRequest request = new SoapHttpRequest(URL, ACTION, BODY, BODY_BYTE, parts);

@@ -52,7 +52,7 @@ public class SoapHttpClientTest {
 
 	private SoapHttpClient soapClient;
 
-	private ByteArrayInputStream bodyRequest;
+	private byte[] bodyRequest;
 
 	@Before
 	public void init() throws ClientProtocolException, IOException {
@@ -79,7 +79,7 @@ public class SoapHttpClientTest {
 
 		this.soapClient = new SoapHttpClient(this.httpClient);
 
-		this.bodyRequest = new ByteArrayInputStream("request test".getBytes("UTF-8"));
+		this.bodyRequest = "request test".getBytes("UTF-8");
 	}
 
 	@Test

@@ -2,7 +2,6 @@ package br.ufsc.bridge.soap.http;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -27,18 +26,17 @@ import org.w3c.dom.Document;
 import br.ufsc.bridge.soap.http.exception.SoapCreateMessageException;
 import br.ufsc.bridge.soap.http.exception.SoapHttpConnectionException;
 import br.ufsc.bridge.soap.http.exception.SoapHttpResponseException;
-import br.ufsc.bridge.soap.http.util.ByteArrayOutputStreamNoCopy;
 
 @Slf4j
 @AllArgsConstructor
 public class SoapMessageBuilder {
 	protected SoapCredential c;
 
-	public InputStream createMessage(Object jaxbObject) throws SoapCreateMessageException, SoapHttpResponseException, SoapHttpConnectionException {
+	public byte[] createMessage(Object jaxbObject) throws SoapCreateMessageException, SoapHttpResponseException, SoapHttpConnectionException {
 		try {
-			ByteArrayOutputStreamNoCopy outputStream = new ByteArrayOutputStreamNoCopy();
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			this.soapMessage(jaxbObject).writeTo(outputStream);
-			return outputStream.inputStream();
+			return outputStream.toByteArray();
 		} catch (IOException | SOAPException e) {
 			throw new SoapCreateMessageException("Error writing soap message", e);
 		}

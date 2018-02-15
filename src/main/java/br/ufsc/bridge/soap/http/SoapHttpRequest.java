@@ -7,10 +7,11 @@ import static br.ufsc.bridge.soap.http.multipart.SoapMultipartConstants.SOAP_ACT
 import static br.ufsc.bridge.soap.http.multipart.SoapMultipartConstants.SOAP_TYPE;
 import static br.ufsc.bridge.soap.http.multipart.SoapMultipartConstants.SOAP_XOP_TYPE;
 import static br.ufsc.bridge.soap.http.multipart.SoapMultipartConstants.START_KEY;
-import static br.ufsc.bridge.soap.http.multipart.SoapMultipartConstants.TEXT_XML_UTF8_TYPE;
+import static org.apache.http.entity.ContentType.APPLICATION_OCTET_STREAM;
+import static org.apache.http.entity.mime.MIME.CONTENT_TRANSFER_ENC;
+import static org.apache.http.entity.mime.MIME.ENC_8BIT;
 
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,7 +33,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.FormBodyPartBuilder;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.entity.mime.content.InputStreamBody;
+import org.apache.http.entity.mime.content.ByteArrayBody;
 import org.apache.http.message.BasicNameValuePair;
 
 @Slf4j
@@ -46,19 +47,19 @@ public class SoapHttpRequest {
 	private String action;
 	private Map<String, String> headers = new HashMap<>();
 	private String soapId;
-	private InputStream body;
-	private Map<String, InputStream> parts;
+	private byte[] body;
+	private Map<String, byte[]> parts;
 
-	public SoapHttpRequest(String url, String action, InputStream body) {
+	public SoapHttpRequest(String url, String action, byte[] body) {
 		this(url, action, null, body);
 		this.multipart = false;
 	}
 
-	public SoapHttpRequest(String url, String action, String soapId, InputStream soap) {
+	public SoapHttpRequest(String url, String action, String soapId, byte[] soap) {
 		this(url, action, soapId, soap, null);
 	}
 
-	public SoapHttpRequest(String url, String action, String soapId, InputStream soap, Map<String, InputStream> parts) {
+	public SoapHttpRequest(String url, String action, String soapId, byte[] soap, Map<String, byte[]> parts) {
 		this.url = url;
 		this.action = action;
 		this.soapId = soapId;
@@ -102,7 +103,7 @@ public class SoapHttpRequest {
 					.setContentType(StringUtils.isBlank(this.action)
 							? SOAP_TYPE
 							: SOAP_TYPE.withParameters(new BasicNameValuePair(ACTION_KEY, this.action)))
-					.setStream(this.body).build();
+					.setBinary(this.body).build();
 		}
 		return httpEntity;
 	}
@@ -123,16 +124,17 @@ public class SoapHttpRequest {
 		entityBuilder.addPart(FormBodyPartBuilder.create()
 				.setName(id)
 				.addField(CONTENT_ID, id)
-				.setBody(new InputStreamBody(this.body, SOAP_XOP_TYPE))
+				.addField(CONTENT_TRANSFER_ENC, ENC_8BIT)
+				.setBody(new ByteArrayBody(this.body, SOAP_XOP_TYPE, null))
 				.build());
 
 		if (this.parts != null) {
-			for (Entry<String, InputStream> part : this.parts.entrySet()) {
+			for (Entry<String, byte[]> part : this.parts.entrySet()) {
 				String partId = StringUtils.removeStart(part.getKey(), "cid:");
 				entityBuilder.addPart(FormBodyPartBuilder.create()
 						.setName(partId)
 						.addField(CONTENT_ID, this.addPointyBrackets(partId))
-						.setBody(new InputStreamBody(part.getValue(), TEXT_XML_UTF8_TYPE))
+						.setBody(new ByteArrayBody(part.getValue(), APPLICATION_OCTET_STREAM, null))
 						.build());
 			}
 		}
@@ -152,12 +154,6 @@ public class SoapHttpRequest {
 			ByteArrayOutputStream writer = new ByteArrayOutputStream();
 			this.httpEntity().writeTo(writer);
 			builder.append("\n" + IOUtils.toString(writer.toByteArray(), "UTF-8"));
-			this.body.reset();
-			if (this.parts != null) {
-				for (InputStream parts : this.parts.values()) {
-					parts.reset();
-				}
-			}
 		} catch (Exception e) {
 			log.debug("error reading request for debug", e);
 		}

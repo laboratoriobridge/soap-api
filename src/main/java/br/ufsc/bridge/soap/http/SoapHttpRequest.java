@@ -3,7 +3,6 @@ package br.ufsc.bridge.soap.http;
 import static br.ufsc.bridge.soap.http.multipart.SoapMultipartConstants.ACTION_KEY;
 import static br.ufsc.bridge.soap.http.multipart.SoapMultipartConstants.CONTENT_ID;
 import static br.ufsc.bridge.soap.http.multipart.SoapMultipartConstants.MULTIPART_RELATED_TYPE;
-import static br.ufsc.bridge.soap.http.multipart.SoapMultipartConstants.SOAP_ACTION_KEY;
 import static br.ufsc.bridge.soap.http.multipart.SoapMultipartConstants.SOAP_TYPE;
 import static br.ufsc.bridge.soap.http.multipart.SoapMultipartConstants.SOAP_XOP_TYPE;
 import static br.ufsc.bridge.soap.http.multipart.SoapMultipartConstants.START_KEY;
@@ -63,7 +62,6 @@ public class SoapHttpRequest {
 		this.url = url;
 		this.action = action;
 		this.soapId = soapId;
-		this.headers.put(SOAP_ACTION_KEY, action);
 		this.body = soap;
 		this.parts = parts;
 		this.multipart = true;

@@ -38,6 +38,7 @@ public class SoapHttpRequestTest {
 
 		this.headers = new LinkedHashMap<>();
 		this.headers.put(HttpHeaders.CONTENT_ENCODING, "gzip,deflate");
+		this.headers.put("SOAPAction", ACTION);
 	}
 
 	@Test

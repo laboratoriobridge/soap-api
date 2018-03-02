@@ -7,4 +7,8 @@ public class SoapHttpResponseException extends SoapException {
 	public SoapHttpResponseException(String message) {
 		super(message);
 	}
+
+	public SoapHttpResponseException(String message, SoapInvalidHeaderException e) {
+		super(message, e);
+	}
 }

@@ -1,0 +1,14 @@
+HTTP/1.1 200 OK
+messageType: multipart/related
+Content-Type: multipart/related;boundary=MIME_boundary;type="application/xop+xml";start="<1>";start-info="application/soap+xml";action="urn:ihe:iti:2007:ProvideAndRegisterDocumentSet-bResponse"
+Date: Fri, 19 Jan 2018 18:55:51 GMT
+Transfer-Encoding: chunked
+Connection: Keep-Alive
+
+--MIME_boundary
+Content-Type: application/xop+xml; charset=UTF-8; type="application/soap+xml"
+Content-Transfer-Encoding: binary
+Content-ID: <0.urn:uuid:A62217736BFD4F63631516388208911@apache.org>
+
+teste
+--MIME_boundary--

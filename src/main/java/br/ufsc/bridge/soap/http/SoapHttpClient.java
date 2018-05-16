@@ -1,14 +1,11 @@
 package br.ufsc.bridge.soap.http;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
-import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
@@ -26,7 +23,6 @@ import br.ufsc.bridge.soap.http.util.ByteArrayOutputStreamNoCopy;
 @Slf4j
 public class SoapHttpClient {
 	private CloseableHttpClient httpClient;
-	private Map<String, String> customHeaders;
 
 	public SoapHttpClient() {
 		this(RequestConfig.custom()
@@ -53,24 +49,13 @@ public class SoapHttpClient {
 
 	public SoapHttpClient(CloseableHttpClient httpClient) {
 		this.httpClient = httpClient;
-
-		this.customHeaders = new HashMap<>();
-		this.putHeader(HttpHeaders.ACCEPT_ENCODING, "gzip,deflate");
-	}
-
-	public void putHeader(String key, String value) {
-		if (value != null) {
-			this.customHeaders.put(key, value);
-		} else {
-			this.customHeaders.remove(key);
-		}
 	}
 
 	public SoapHttpResponse request(SoapHttpRequest soapHttpRequest) throws SoapHttpResponseException, SoapHttpConnectionException {
 		HttpRequestBase httpRequest = null;
 		ByteArrayOutputStreamNoCopy baos = null;
 		try {
-			HttpResponse response = this.httpClient.execute(httpRequest = soapHttpRequest.httpRequest(this.customHeaders));
+			HttpResponse response = this.httpClient.execute(httpRequest = soapHttpRequest.httpRequest());
 
 			int responseCode = response.getStatusLine().getStatusCode();
 			if (responseCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {

@@ -76,12 +76,9 @@ public class SoapHttpRequest {
 		return this;
 	}
 
-	public HttpRequestBase httpRequest(Map<String, String> customHeaders) {
+	public HttpRequestBase httpRequest() {
 		HttpPost httpPost = new HttpPost(this.url);
 		httpPost.setEntity(this.httpEntity());
-		for (Map.Entry<String, String> header : customHeaders.entrySet()) {
-			httpPost.setHeader(header.getKey(), header.getValue());
-		}
 		for (Entry<String, String> header : this.headers.entrySet()) {
 			httpPost.setHeader(header.getKey(), header.getValue());
 		}

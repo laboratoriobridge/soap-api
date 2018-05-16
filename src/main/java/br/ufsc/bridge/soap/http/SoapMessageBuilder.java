@@ -24,15 +24,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.Document;
 
 import br.ufsc.bridge.soap.http.exception.SoapCreateMessageException;
-import br.ufsc.bridge.soap.http.exception.SoapHttpConnectionException;
-import br.ufsc.bridge.soap.http.exception.SoapHttpResponseException;
+import br.ufsc.bridge.soap.jaxb.JAXBContextWrapper;
 
 @Slf4j
 @AllArgsConstructor
 public class SoapMessageBuilder {
+
 	protected SoapCredential c;
 
-	public byte[] createMessage(Object jaxbObject) throws SoapCreateMessageException, SoapHttpResponseException, SoapHttpConnectionException {
+	public byte[] createMessage(Object jaxbObject) throws SoapCreateMessageException {
 		try {
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			this.soapMessage(jaxbObject).writeTo(outputStream);
@@ -94,7 +94,7 @@ public class SoapMessageBuilder {
 	}
 
 	protected Document jaxbObjectToDocument(Object data) throws JAXBException, ParserConfigurationException {
-		JAXBContext jc = JAXBContext.newInstance(data.getClass());
+		JAXBContext jc = JAXBContextWrapper.newInstance(data.getClass());
 
 		Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 

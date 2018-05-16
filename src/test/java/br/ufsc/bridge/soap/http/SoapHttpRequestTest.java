@@ -28,48 +28,50 @@ public class SoapHttpRequestTest {
 	public static byte[] PART1_BYTE;
 	public static byte[] PART2_BYTE;
 
-	private HashMap<String, String> headers;
-
 	@Before
 	public void init() throws Exception {
 		BODY_BYTE = BODY.getBytes("UTF-8");
 		PART1_BYTE = PART1.getBytes("UTF-8");
 		PART2_BYTE = PART2.getBytes("UTF-8");
-
-		this.headers = new LinkedHashMap<>();
-		this.headers.put(HttpHeaders.CONTENT_ENCODING, "gzip,deflate");
-		this.headers.put("SOAPAction", ACTION);
 	}
 
 	@Test
 	public void applicationSoap() throws IOException {
 		SoapHttpRequest request = new SoapHttpRequest(URL, ACTION, BODY_BYTE);
+		request.addHeader(HttpHeaders.CONTENT_ENCODING, "gzip,deflate");
+		request.addHeader("SOAPAction", ACTION);
 
-		HttpRequestBase httpPost = request.httpRequest(this.headers);
+		HttpRequestBase httpPost = request.httpRequest();
 		Assert.assertEquals(SoapTestFileUtils.toString("/http-post/app-soap.txt"), httpPostToString(httpPost));
 	}
 
 	@Test
 	public void applicationSoapNoAction() throws IOException {
 		SoapHttpRequest request = new SoapHttpRequest(URL, null, BODY_BYTE);
+		request.addHeader(HttpHeaders.CONTENT_ENCODING, "gzip,deflate");
+		request.addHeader("SOAPAction", ACTION);
 
-		HttpRequestBase httpPost = request.httpRequest(this.headers);
+		HttpRequestBase httpPost = request.httpRequest();
 		Assert.assertEquals(SoapTestFileUtils.toString("/http-post/app-soap-noaction.txt"), httpPostToString(httpPost));
 	}
 
 	@Test
 	public void simpleMultipart() throws IOException {
 		SoapHttpRequest request = new SoapHttpRequest(URL, ACTION, BODY, BODY_BYTE);
+		request.addHeader(HttpHeaders.CONTENT_ENCODING, "gzip,deflate");
+		request.addHeader("SOAPAction", ACTION);
 
-		HttpRequestBase httpPost = request.httpRequest(this.headers);
+		HttpRequestBase httpPost = request.httpRequest();
 		Assert.assertEquals(SoapTestFileUtils.toString("/http-post/simple-multipart.txt"), httpPostToString(httpPost));
 	}
 
 	@Test
 	public void simpleMultipartNoAction() throws IOException {
 		SoapHttpRequest request = new SoapHttpRequest(URL, null, BODY, BODY_BYTE);
+		request.addHeader(HttpHeaders.CONTENT_ENCODING, "gzip,deflate");
+		request.addHeader("SOAPAction", ACTION);
 
-		HttpRequestBase httpPost = request.httpRequest(this.headers);
+		HttpRequestBase httpPost = request.httpRequest();
 		Assert.assertEquals(SoapTestFileUtils.toString("/http-post/simple-multipart-noaction.txt"), httpPostToString(httpPost));
 	}
 
@@ -79,8 +81,10 @@ public class SoapHttpRequestTest {
 		parts.put(PART2, PART2_BYTE);
 		parts.put(PART1, PART1_BYTE);
 		SoapHttpRequest request = new SoapHttpRequest(URL, ACTION, BODY, BODY_BYTE, parts);
+		request.addHeader(HttpHeaders.CONTENT_ENCODING, "gzip,deflate");
+		request.addHeader("SOAPAction", ACTION);
 
-		HttpRequestBase httpPost = request.httpRequest(this.headers);
+		HttpRequestBase httpPost = request.httpRequest();
 		Assert.assertEquals(SoapTestFileUtils.toString("/http-post/multipart.txt"), httpPostToString(httpPost));
 	}
 

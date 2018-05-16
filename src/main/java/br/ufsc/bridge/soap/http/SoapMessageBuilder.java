@@ -29,7 +29,7 @@ import br.ufsc.bridge.soap.jaxb.JAXBContextWrapper;
 @Slf4j
 @AllArgsConstructor
 public class SoapMessageBuilder {
-	private static final DocumentBuilderFactory DOCUMENT_BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
+
 	protected SoapCredential c;
 
 	public byte[] createMessage(Object jaxbObject) throws SoapCreateMessageException {
@@ -96,7 +96,7 @@ public class SoapMessageBuilder {
 	protected Document jaxbObjectToDocument(Object data) throws JAXBException, ParserConfigurationException {
 		JAXBContext jc = JAXBContextWrapper.newInstance(data.getClass());
 
-		Document document = DOCUMENT_BUILDER_FACTORY.newDocumentBuilder().newDocument();
+		Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 
 		Marshaller marshaller = jc.createMarshaller();
 		marshaller.marshal(data, document);

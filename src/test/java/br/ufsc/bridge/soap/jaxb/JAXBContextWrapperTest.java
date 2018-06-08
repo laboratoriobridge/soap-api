@@ -10,10 +10,14 @@ public class JAXBContextWrapperTest {
 
 	@Test
 	public void shouldReturnTheSameInstance() throws JAXBException {
-		JAXBContext instance1 = JAXBContextWrapper.newInstance(this.getClass());
-		JAXBContext instance2 = JAXBContextWrapper.newInstance(this.getClass());
+		JAXBContext instance1 = JAXBContextWrapper.newInstance(this.getClass(), TestObj.class);
+		JAXBContext instance2 = JAXBContextWrapper.newInstance(this.getClass(), TestObj.class);
 
 		Assert.assertSame(instance1, instance2);
 	}
-
+	
+	public static class TestObj {
+		
+	}
+	
 }

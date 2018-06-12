@@ -2,16 +2,16 @@ package br.ufsc.bridge.soap.jaxb;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
 public class JAXBContextWrapper {
 
-	private static Map<List<Class<?>>, JAXBContext> contextByClass = new HashMap<>();
+	private static Map<List<Class<?>>, JAXBContext> contextByClass = new ConcurrentHashMap<>();
 
 	private JAXBContextWrapper() {
 		// utility class

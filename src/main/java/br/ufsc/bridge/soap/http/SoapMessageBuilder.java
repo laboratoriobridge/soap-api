@@ -28,22 +28,22 @@ import br.ufsc.bridge.soap.jaxb.JAXBContextWrapper;
 
 @Slf4j
 @AllArgsConstructor
-public class SoapMessageBuilder {
+public abstract class SoapMessageBuilder<T> {
 
 	protected SoapCredential c;
 
-	public byte[] createMessage(Object jaxbObject) throws SoapCreateMessageException {
+	public byte[] createMessage(T bodyContent) throws SoapCreateMessageException {
 		try {
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			this.soapMessage(jaxbObject).writeTo(outputStream);
+			this.soapMessage(bodyContent).writeTo(outputStream);
 			return outputStream.toByteArray();
 		} catch (IOException | SOAPException e) {
 			throw new SoapCreateMessageException("Error writing soap message", e);
 		}
 	}
 
-	protected SOAPMessage soapMessage(Object data) throws SoapCreateMessageException {
-		SOAPMessage message = null;
+	protected SOAPMessage soapMessage(T data) throws SoapCreateMessageException {
+		SOAPMessage message;
 		try {
 			message = MessageFactory.newInstance(SOAPConstants.SOAP_1_2_PROTOCOL).createMessage();
 
@@ -76,7 +76,7 @@ public class SoapMessageBuilder {
 			}
 
 			SOAPBody body = message.getSOAPBody();
-			body.addDocument(this.jaxbObjectToDocument(data));
+			body.addDocument(this.toDocument(data));
 
 			if (log.isDebugEnabled()) {
 				try {
@@ -93,13 +93,5 @@ public class SoapMessageBuilder {
 		return message;
 	}
 
-	protected Document jaxbObjectToDocument(Object data) throws JAXBException, ParserConfigurationException {
-		JAXBContext jc = JAXBContextWrapper.newInstance(data.getClass());
-
-		Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-
-		Marshaller marshaller = jc.createMarshaller();
-		marshaller.marshal(data, document);
-		return document;
-	}
+	protected abstract Document toDocument(T bodyContent) throws Exception;
 }

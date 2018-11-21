@@ -8,3 +8,7 @@
 
 target/
 /target/
+
+# Webstorm / IntelliJ
+.idea
+*.iml

@@ -9,7 +9,7 @@
 
     <name>SOAP API</name>
     <description>API to comunicate via SOAP without WSDL</description>
-  	<url>https://github.com/laboratoriobridge/validation</url>
+  	<url>https://github.com/laboratoriobridge/soap-api</url>
 
 	<licenses>
 		<license>

@@ -11,6 +11,13 @@
     <description>API to comunicate via SOAP without WSDL</description>
   	<url>https://github.com/laboratoriobridge/validation</url>
 
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>https://opensource.org/licenses/MIT</url>
+		</license>
+	</licenses>
+
 	<organization>
 		<name>Laboratório Bridge</name>
 		<url>http://www.bridge.ufsc.br</url>

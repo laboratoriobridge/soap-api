@@ -4,7 +4,7 @@
 
 	<groupId>br.ufsc.bridge</groupId>
 	<artifactId>soap-api</artifactId>
-	<version>0.0.7-SNAPSHOT</version>
+	<version>0.0.7</version>
 	<packaging>jar</packaging>
 
     <name>SOAP API</name>
@@ -208,6 +208,6 @@
 		<connection>scm:git:git@github.com:laboratoriobridge/soap-api.git</connection>
 		<url>scm:git:git@github.com:laboratoriobridge/soap-api.git</url>
 		<developerConnection>scm:git:git@github.com:laboratoriobridge/soap-api.git</developerConnection>
-		<tag>HEAD</tag>
+		<tag>0.0.7</tag>
 	</scm>
 </project>

@@ -56,10 +56,12 @@
 			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
+		<!-- provided: o Lombok só existe em tempo de compilação (anotações são @Retention(SOURCE)) -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<version>${lombok.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -106,10 +108,20 @@
 			<artifactId>saaj-impl</artifactId>
 			<version>1.5.3</version>
 		</dependency>
+		<!--
+			Só a API: biblioteca não declara binding de log, senão colide com o binding do
+			consumidor no classpath. Escolher a implementação é responsabilidade de quem usa.
+		-->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.21</version>
+		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.7.21</version>
+			<scope>test</scope>
 		</dependency>
 
 		<!-- jaxb-runtime traz api + impl + activation; o jaxb-impl 2.2.6 depende de javax.activation, removido no Java 11 -->

@@ -34,19 +34,20 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.target>1.7</maven.compiler.target>
-		<maven.compiler.source>1.7</maven.compiler.source>
-		<java.version>1.7</java.version>
+		<!-- bytecode 1.8 para não quebrar consumidores em Java 8; o build roda tanto em JDK 8 quanto em 17 -->
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<java.version>1.8</java.version>
 
-		<lombok.version>1.16.6</lombok.version>
+		<lombok.version>1.18.34</lombok.version>
 		<apache.http.version>4.4.1</apache.http.version>
 	</properties>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
-			<version>1.9.5</version>
+			<artifactId>mockito-core</artifactId>
+			<version>4.11.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -55,10 +56,12 @@
 			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
+		<!-- provided: o Lombok só existe em tempo de compilação (anotações são @Retention(SOURCE)) -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<version>${lombok.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -94,26 +97,38 @@
 
 
 
+		<!--
+			saaj-impl (e não só a saaj-api): até o Java 8 a JDK embutia uma implementação SAAJ
+			(com.sun.xml.internal.messaging.saaj), removida pela JEP 320 no Java 11. Sem a impl
+			explícita, MessageFactory.newInstance() falha em runtime a partir do Java 11.
+			A 1.5.x ainda usa o namespace javax.xml.soap; a 2.x/3.x migra para jakarta.
+		-->
 		<dependency>
-			<groupId>javax.xml.soap</groupId>
-			<artifactId>saaj-api</artifactId>
-			<version>1.3.5</version>
+			<groupId>com.sun.xml.messaging.saaj</groupId>
+			<artifactId>saaj-impl</artifactId>
+			<version>1.5.3</version>
+		</dependency>
+		<!--
+			Só a API: biblioteca não declara binding de log, senão colide com o binding do
+			consumidor no classpath. Escolher a implementação é responsabilidade de quem usa.
+		-->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.21</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.7.21</version>
+			<scope>test</scope>
 		</dependency>
 
+		<!-- jaxb-runtime traz api + impl + activation; o jaxb-impl 2.2.6 depende de javax.activation, removido no Java 11 -->
 		<dependency>
-			<groupId>javax.xml.bind</groupId>
-			<artifactId>jaxb-api</artifactId>
-			<version>2.2.7</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sun.xml.bind</groupId>
-			<artifactId>jaxb-impl</artifactId>
-			<version>2.2.6</version>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
+			<version>2.3.9</version>
 		</dependency>
 	</dependencies>
 
@@ -137,7 +152,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>2.2.1</version>
+				<version>3.3.0</version>
 				<executions>
 				  <execution>
 				    <id>attach-sources</id>
@@ -151,7 +166,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.9.1</version>
+				<version>3.6.3</version>
+				<configuration>
+					<doclint>none</doclint>
+				</configuration>
 				<executions>
 				  <execution>
 				    <id>attach-javadocs</id>

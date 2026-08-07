@@ -24,7 +24,7 @@ import org.apache.http.message.BasicHeader;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -58,13 +58,13 @@ public class SoapHttpClientTest {
 
 	@Before
 	public void init() throws ClientProtocolException, IOException {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 
 		this.headers = new Header[2];
 		this.headers[0] = new BasicHeader(HttpHeaders.CONTENT_TYPE, " application/soap+xml");
 		this.headers[1] = new BasicHeader("MIME-Version", "1.0");
 
-		when(this.httpClient.execute(Matchers.any(HttpPost.class))).thenReturn(this.response);
+		when(this.httpClient.execute(ArgumentMatchers.any(HttpPost.class))).thenReturn(this.response);
 
 		when(this.response.getStatusLine()).thenReturn(this.status);
 		when(this.response.getEntity()).thenReturn(this.entity);
@@ -159,7 +159,7 @@ public class SoapHttpClientTest {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void ioExcpetion() throws ClientProtocolException, IOException, SoapHttpResponseException {
-		when(this.httpClient.execute(Matchers.any(HttpHost.class), Matchers.any(HttpPost.class)))
+		when(this.httpClient.execute(ArgumentMatchers.any(HttpHost.class), ArgumentMatchers.any(HttpPost.class)))
 				.thenThrow(ConnectionClosedException.class,
 						ConnectTimeoutException.class,
 						ConnectException.class);

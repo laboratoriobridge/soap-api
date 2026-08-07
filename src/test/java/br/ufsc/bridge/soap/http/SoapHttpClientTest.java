@@ -1,5 +1,7 @@
 package br.ufsc.bridge.soap.http;
 
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
@@ -108,6 +110,50 @@ public class SoapHttpClientTest {
 		} catch (SoapHttpResponseException e) {
 			Assert.assertEquals("HTTP Response code: 400", e.getMessage());
 		}
+	}
+
+	@Test
+	public void responseClosedOnSuccess() throws ClientProtocolException, IOException, SoapHttpResponseException, SoapHttpConnectionException {
+		this.soapClient.request(new SoapHttpRequest(URL, null, this.bodyRequest));
+
+		verify(this.response).close();
+	}
+
+	@Test
+	public void responseClosedOnServerError() throws ClientProtocolException, IOException, SoapHttpConnectionException {
+		when(this.status.getStatusCode()).thenReturn(500);
+
+		try {
+			this.soapClient.request(new SoapHttpRequest(URL, null, this.bodyRequest));
+			Assert.fail("SoapHttpResponseException esperada");
+		} catch (SoapHttpResponseException e) {
+			// esperado
+		}
+
+		verify(this.response).close();
+	}
+
+	/**
+	 * Sem consumir a entity e fechar o response, a conexão nunca volta para o pool
+	 * e uma janela de instabilidade do servidor esgota o PoolingHttpClientConnectionManager.
+	 */
+	@Test
+	public void responseClosedAndEntityConsumedOnOtherErrors() throws ClientProtocolException, IOException, SoapHttpConnectionException {
+		when(this.entity.isStreaming()).thenReturn(true);
+
+		for (int statusCode : new int[] { 401, 403, 404, 429, 502, 503, 504 }) {
+			when(this.status.getStatusCode()).thenReturn(statusCode);
+
+			try {
+				this.soapClient.request(new SoapHttpRequest(URL, null, this.bodyRequest));
+				Assert.fail("SoapHttpResponseException esperada para o status " + statusCode);
+			} catch (SoapHttpResponseException e) {
+				Assert.assertEquals("HTTP Response code: " + statusCode, e.getMessage());
+			}
+		}
+
+		verify(this.entity, times(7)).getContent();
+		verify(this.response, times(7)).close();
 	}
 
 	@Test

@@ -9,11 +9,13 @@ import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.util.EntityUtils;
 
 import br.ufsc.bridge.soap.http.exception.SoapHttpConnectionException;
 import br.ufsc.bridge.soap.http.exception.SoapHttpResponseException;
@@ -53,15 +55,18 @@ public class SoapHttpClient {
 
 	public SoapHttpResponse request(SoapHttpRequest soapHttpRequest) throws SoapHttpResponseException, SoapHttpConnectionException {
 		HttpRequestBase httpRequest = null;
+		CloseableHttpResponse response = null;
 		ByteArrayOutputStreamNoCopy baos = null;
 		try {
-			HttpResponse response = this.httpClient.execute(httpRequest = soapHttpRequest.httpRequest());
+			response = this.httpClient.execute(httpRequest = soapHttpRequest.httpRequest());
 
 			int responseCode = response.getStatusLine().getStatusCode();
 			if (responseCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
 				baos = new ByteArrayOutputStreamNoCopy(response.getEntity().getContent());
 				throw new SoapHttpResponseException("HTTP Response code: " + responseCode + " | error: " + new String(baos.toByteArray(), "UTF-8"));
 			} else if (responseCode != HttpStatus.SC_OK) {
+				// a entity precisa ser consumida, senão a conexão nunca volta para o pool
+				EntityUtils.consumeQuietly(response.getEntity());
 				throw new SoapHttpResponseException("HTTP Response code: " + responseCode);
 			}
 
@@ -79,6 +84,7 @@ public class SoapHttpClient {
 			throw new SoapHttpResponseException("Multipart file with invalid header", e);
 		} finally {
 			IOUtils.closeQuietly(baos);
+			IOUtils.closeQuietly(response);
 		}
 	}
 
